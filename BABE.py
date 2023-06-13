@@ -34,7 +34,7 @@ def get_priors(E_G, Z_G ,Z_EG,P_G, Eval, Gval, Zval,d):
 
 def update(E_G, Z_G,Z_EG, P_G,Eval, Gval,Zval,d):
     names = ['E_d', 'G', 'Z_d']
-    E_G_new = E_given_G_Uniform(names, Eval, Gval)
+    E_G_new = E_given_G_Uniform( Eval, Gval)
     
     for EG in E_G.keys(): #over all E|G
           
@@ -88,6 +88,9 @@ def inferE(df, names, E_given_G, Z_G, Z_EG, nE, d): #Find P(M|A,S) Bayesian Netw
         g=df.iloc[i].loc['G'] #the group
 
         P_z_g = Z_G.get((g,z))
+        if P_z_g ==0:
+            P_z_g=0.000001
+        
 
 
         e_probs = [] #probabilities of all E values, to pick the highest
@@ -99,19 +102,26 @@ def inferE(df, names, E_given_G, Z_G, Z_EG, nE, d): #Find P(M|A,S) Bayesian Netw
             
 
             P_z_e_g = Z_EG.get((e,g,z))
-
-
+            if P_z_e_g ==0:
+                P_z_e_g=0.000001
+                
+          
             P_eg =  E_given_G.get((e,g)) 
+            if P_eg==0:
+                P_eg=0.000001
+           
 
+            
 
-
-            P_e_gz=round(P_z_e_g* P_eg/P_z_g, d)
+            P_e_gz=round(P_z_e_g* P_eg/P_z_g, 8)
       
             e_probs.append(P_e_gz)
 
 
+
         #normalize
         Sum = sum(e_probs)
+
         for k in range(len(e_probs)):
             e_probs[k] = round(e_probs[k]/Sum,d)
 
@@ -138,7 +148,10 @@ def inferE_fast(df, names, E_given_G, Z_G, Z_EG, nE,nZ, d): #Find P(M|A,S) Bayes
             print("z: ", z)
         
             P_z_g = Z_G.get((g,z))
+            if P_z_g ==0:
+                P_z_g=0.000001
             print("P_z_g", P_z_g)
+            
 
             e_probs = [] #probabilities of all E values, to pick the highest
 
@@ -147,6 +160,8 @@ def inferE_fast(df, names, E_given_G, Z_G, Z_EG, nE,nZ, d): #Find P(M|A,S) Bayes
 
 
                 P_z_e_g = Z_EG.get((e,g,z))
+                if P_z_e_g ==0:
+                    P_z_e_g=0.000001
                 print('P_z_e_g',P_z_e_g)
 
                 P_eg =  E_given_G.get((e,g)) 
@@ -194,6 +209,28 @@ def SP(colname,  df):
 
 
 ####Utils Parameters#####
+
+
+def manhattan_dist(a,b):
+    '''
+    
+    manhattan distance between two vectors
+    Parameters
+    ----------
+    a : vector
+        vector with values 1
+    b : vector
+        vector with values 2
+
+    Returns
+    -------
+    Int
+        The distance between two vectors
+
+    '''
+    
+    return sum(abs(val1-val2) for val1, val2 in zip(a,b))
+    
 
 #names = ['E_d', 'G', 'Z_d']
 def Z_given_EG(df,names, nE, nG, nZ):
@@ -426,7 +463,10 @@ def Prob(df,name, n):
 
 ### Data ####
 
-def generate_data(n, p, bias0, bias1, mean0, mean1, sd0, sd1, biasprob,threshold, seed):
+def generate_data(n, p, bias0, bias1, mean0, mean1, sd0, sd1, threshold, seed):
+ 
+    
+
     
     np.random.seed(seed)
 
@@ -440,12 +480,12 @@ def generate_data(n, p, bias0, bias1, mean0, mean1, sd0, sd1, biasprob,threshold
         if g ==0:
             e = np.random.normal(mean0,sd0)
             while e<0 or e>99:
-                e = np.random.normal(mean0,sd1)
+                e = np.random.normal(mean0,sd0)
             E.append(e)
         else:
             e=np.random.normal(mean1,sd1)
             while e<0 or e>99:
-                e = np.random.normal(mean0,sd1)
+                e = np.random.normal(mean1,sd1)
             E.append(e)
 
     #adding bias and generating Z   
@@ -454,14 +494,26 @@ def generate_data(n, p, bias0, bias1, mean0, mean1, sd0, sd1, biasprob,threshold
 
     for e,g in zip (E,G):
 
+       
+        if g==0:
+            bias = np.random.normal(bias0,0.05)
+            if e<50:
+                
+                z=e+(e*bias)
+            else:
+                z = e+(99-e)*bias
+                
 
-        r = np.random.rand(1)[0] # adding randomness
-        if g==0 and r<biasprob:
-            e=e+e*bias0
-
-        if g==1 and r>biasprob:
-            e=e+e*bias1
-        Z.append(e)
+        elif g==1:
+            bias = np.random.normal(bias1,0.05)
+            if e<50:
+                
+                z=e+(e*bias)
+            else:
+                z = e+(99-e)*bias
+   
+        
+        Z.append(z)
 
 
 
@@ -481,8 +533,9 @@ def generate_data(n, p, bias0, bias1, mean0, mean1, sd0, sd1, biasprob,threshold
     df['YZ'] = [1 if x>threshold else 0 for x in df.Z_d]
 
 
-    df_test =  df.sample(frac=0.3, replace=False, random_state=1)
-    return df, df_test
+    
+    source, estimate, test = np.split(df.sample(frac=1), [int(.4*len(df)), int(.8*len(df))])
+    return source, estimate,test
     
     
 
