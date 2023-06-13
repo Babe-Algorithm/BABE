@@ -1,13 +1,2 @@
 # BABE
-The algorithm for fairness pre-processing in the presence of latent explanatory variables.
-
-DISCLAIMER
-
-THIS SOURCE CODE IS SUPPLIED "AS IS" WITHOUT WARRANTY OF ANY KIND, AND ITS
-AUTHORS DISCLAIM ANY AND ALL WARRANTIES, INCLUDING BUT NOT
-LIMITED TO ANY IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-PARTICULAR PURPOSE, AND ANY WARRANTIES OR NON INFRINGEMENT. THE USER ASSUMES
-ALL LIABILITY AND RESPONSIBILITY FOR USE OF THIS SOURCE CODE, AND THE
-AUTHORS WILL NOT BE LIABLE FOR
-DAMAGES OF ANY KIND RESULTING FROM ITS USE. Without limiting the generality of
-the foregoing, the authors do not warrant that the Source Code will be error-free, will operate without interruption, or will meet the needs of the user.
+The algorithm for fairness pre-processing in the presence of latent explanatory variables
